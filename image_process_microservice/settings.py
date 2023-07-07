@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
+import logging.config
 from pathlib import Path
+from django.utils.log import DEFAULT_LOGGING
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -136,3 +139,59 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+# Logging configs
+
+LOGGING_CONFIG = None  # disable Django's logging setup
+
+LOGLEVEL = os.environ.get('LOGLEVEL', 'info').upper()
+
+logging.config.dictConfig(
+    {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'default': {
+                # exact format is not important, this is the minimum information
+                'format': '[%(asctime)s] %(levelname)s  | %(filename)s | %(message)s',
+                'datefmt': '%d/%B/%Y %H:%M:%S',
+            },
+            'django.server': DEFAULT_LOGGING['formatters']['django.server'],
+        },
+        'handlers': {
+            # console logs to stderr
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'default',
+            },
+            'django.server': DEFAULT_LOGGING['handlers']['django.server'],
+        },
+        'loggers': {
+            # default for all undefined Python modules
+            '': {
+                'level': 'WARNING',
+                'handlers': ['console'],
+            },
+            # Our application code
+            'app': {
+                'level': LOGLEVEL,
+                'handlers': ['console'],
+                # Avoid double logging because of root logger
+                'propagate': False,
+            },
+            # Default runserver request logging
+            'django.server': DEFAULT_LOGGING['loggers']['django.server'],
+        },
+    }
+)
+
+# Disable logging during running tests
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    logging.disable(logging.CRITICAL)
+
+
+# storage settings
+MINIO_ACCESS_KEY = 'admin'  # os.getenv('MINIO_ACCESS_KEY')
+MINIO_PASSWORD = 'password'  # os.getenv('MINIO_PASSWORD')
+MINIO_BUCKET_NAME = 'images'
+MINIO_SERVER_URL = 'http://localhost:9000'

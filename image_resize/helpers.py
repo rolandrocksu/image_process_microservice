@@ -3,9 +3,9 @@ import os
 
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.urls import reverse
 from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from .utils import upload_image
 
 
 def resize_image(file_name: str, image_file: InMemoryUploadedFile, width: int, height: int) -> str:
@@ -20,8 +20,8 @@ def resize_image(file_name: str, image_file: InMemoryUploadedFile, width: int, h
     if not default_storage.exists(image_name):
         new_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
         new_image.save(new_image_path, image.format)
-
-    return reverse('image', kwargs={'image_name': image_name})
+        upload_image(new_image_path)
+    return image_name
 
 
 def generate_image_name(name: str, width: int, height: int, image_format: str) -> str:

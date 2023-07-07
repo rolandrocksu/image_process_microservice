@@ -1,18 +1,16 @@
-import hashlib
 import os
 
 from django.conf import settings
-from django.core.files.storage import default_storage
 from django.http import FileResponse
-from django.urls import reverse
-from PIL import Image
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 
-from .serializer import ResizePictureSerializer
+from django.urls import reverse
 from .helpers import resize_image
+from .serializer import ResizePictureSerializer
+
 
 class ImageView(APIView):
     permission_classes = [AllowAny]
@@ -36,6 +34,12 @@ class ResizePictureView(APIView):
         height = serializer.validated_data.get('height', 0)
 
         with file.open(mode='rb') as image_file:
-            image_url = resize_image(file.name, image_file, width, height)
+            image_name = resize_image(file.name, image_file, width, height)
 
-        return Response({'url': image_url})
+        image_url = f'{settings.MINIO_SERVER_URL}/{settings.MINIO_BUCKET_NAME}/{image_name}'
+        return Response(
+            {
+                'django_url': reverse('image', kwargs={'image_name': image_name}),
+                'storage_url': image_url
+            }
+        )
