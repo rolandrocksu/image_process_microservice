@@ -42,15 +42,15 @@ class MinioClient:
                     "Effect": "Allow",
                     "Principal": {"AWS": "*"},
                     "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
-                    "Resource": "arn:aws:s3:::my-bucket",
+                    "Resource": f"arn:aws:s3:::{bucket_name}",
                 },
                 {
                     "Effect": "Allow",
                     "Principal": {"AWS": "*"},
                     "Action": "s3:GetObject",
-                    "Resource": "arn:aws:s3:::my-bucket/*",
+                    "Resource": f"arn:aws:s3:::{bucket_name}/*",
                 },
             ],
         }
-        self.client.set_bucket_policy("my-bucket", json.dumps(policy))
+        self.client.set_bucket_policy(bucket_name, json.dumps(policy))
         logging.info(f"Set '{settings.MINIO_BUCKET_NAME}' bucket policy to public")
