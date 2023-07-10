@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from .utils import upload_image
+from .clients import MinioClient
 
 
 def resize_image(file_name: str, image_file: InMemoryUploadedFile, width: int, height: int) -> str:
@@ -20,7 +20,8 @@ def resize_image(file_name: str, image_file: InMemoryUploadedFile, width: int, h
     if not default_storage.exists(image_name):
         new_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
         new_image.save(new_image_path, image.format)
-        upload_image(new_image_path)
+        client = MinioClient(settings.settings.MINIO_ACCESS_KEY, settings.MINIO_PASSWORD)
+        client.upload_object(new_image_path)
     return image_name
 
 
